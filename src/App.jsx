@@ -32,7 +32,7 @@ export default function App() {
   // --- MODAL & UI STATES ---
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false);
   const [tempFuel, setTempFuel] = useState(50);
-  const [ecoColor, setEcoColor] = useState('#3b82f6'); // Default Blue
+  const [ecoColor, setEcoColor] = useState('#3b82f6'); 
 
   // --- HARDWARE REFS ---
   const watchIdRef = useRef(null);
@@ -151,7 +151,6 @@ export default function App() {
     setEcoColor('#3b82f6');
   };
 
-  // --- MASTER IGNITION ---
   const toggleEngineState = () => {
     if (!engineActive && !isPoweringUp) {
       setIsPoweringUp(true);
@@ -209,6 +208,10 @@ export default function App() {
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         padding: '20px', textAlign: 'center', color: '#ffffff'
       }} className="portrait-warning">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}>
+          <path d="M21 2v6h-6"></path>
+          <path d="M21 13a9 9 0 1 1-3-7.7L21 8"></path>
+        </svg>
         <h2 className="font-digital" style={{ fontSize: '24px', letterSpacing: '4px', margin: 0, color: '#3b82f6' }}>TURN DEVICE</h2>
         <p style={{ fontSize: '14px', color: '#a1a1aa', marginTop: '16px' }}>Please rotate your iPhone horizontally.</p>
       </div>
@@ -234,12 +237,28 @@ export default function App() {
               <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: theme.muted, letterSpacing: '2px', fontWeight: 'bold' }}>DIGITAL DASH</p>
             </div>
             
-            {/* DAY/NIGHT TOGGLE (Text Based) */}
+            {/* DAY/NIGHT SVG TOGGLE */}
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, color: theme.text, borderRadius: '10px', padding: '8px 16px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.3s' }}
+              style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, color: theme.text, borderRadius: '12px', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s' }}
             >
-              {isDarkMode ? 'DAY MODE' : 'NIGHT MODE'}
+              {isDarkMode ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              )}
             </button>
           </div>
 
@@ -268,8 +287,7 @@ export default function App() {
             <div onClick={() => { setTempFuel(Math.round(fuel)); setIsFuelModalOpen(true); }} style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '16px 24px', borderRadius: '20px', position: 'relative', boxShadow: theme.shadow, cursor: 'pointer', transition: 'all 0.4s' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', backgroundColor: '#f59e0b', borderRadius: '20px 0 0 20px' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontSize: '14px', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>FUEL TANK</p>
-                <p style={{ margin: 0, fontSize: '16px', color: theme.text, fontWeight: 'bold' }}>{fuel.toFixed(1)}L</p>
+                <p style={{ margin: 0, fontSize: '14px', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>FUEL</p>
               </div>
               <div style={{ display: 'flex', gap: '6px', marginTop: '14px' }}>
                 {[...Array(6)].map((_, i) => (
@@ -317,18 +335,18 @@ export default function App() {
 
         </div>
 
-        {/* --- BOTTOM CONTROL --- */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', zIndex: 20 }}>
+        {/* --- BOTTOM CONTROL (Pushed to bottom left, smaller) --- */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20 }}>
           <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ 
             background: isPoweringUp ? theme.btnBg : engineActive ? 'rgba(239,68,68,0.1)' : theme.cardBg, 
             border: `2px solid ${engineActive ? '#ef4444' : theme.cardBorder}`, 
             color: isPoweringUp ? theme.muted : engineActive ? '#ef4444' : theme.text, 
-            padding: '16px 50px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', letterSpacing: '4px', 
+            padding: '10px 24px', borderRadius: '40px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '2px', 
             cursor: isPoweringUp ? 'wait' : 'pointer', transition: 'all 0.4s ease', outline: 'none', 
-            boxShadow: engineActive && isDarkMode ? '0 0 25px rgba(239,68,68,0.2)' : 'none' 
+            boxShadow: engineActive && isDarkMode ? '0 0 15px rgba(239,68,68,0.2)' : 'none' 
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {isPoweringUp && <div className="animate-spin-fast" style={{ width: '16px', height: '16px', border: '3px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
               <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENGINE OFF' : 'ENGINE ON'}</span>
             </div>
           </button>
