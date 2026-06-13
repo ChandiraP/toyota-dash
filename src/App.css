@@ -34,3 +34,25 @@ html, body, #root {
 .fade-in-ui {
   transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* --- HARDWARE ROTATION LOCKS --- */
+
+/* When the iPhone 11 is held portrait (vertically) */
+@media (orientation: portrait) {
+  .portrait-warning {
+    display: flex !important;
+  }
+  .main-dashboard-layout {
+    display: none !important;
+  }
+}
+
+/* When the iPhone 11 is turned landscape (horizontally) */
+@media (orientation: landscape) {
+  .portrait-warning {
+    display: none !important;
+  }
+  .main-dashboard-layout {
+    display: flex !important;
+  }
+}
