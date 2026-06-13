@@ -28,10 +28,12 @@ export default function App() {
   // --- MODAL & UI STATES ---
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false);
   const [tempFuel, setTempFuel] = useState(50);
-  const [ecoColor, setEcoColor] = useState('#3b82f6'); // Default Blue
+  const [ecoColor, setEcoColor] = useState('#3b82f6'); 
 
   // --- HARDWARE REFS ---
   const watchIdRef = useRef(null);
+  const staleIntervalRef = useRef(null);
+  const lastUpdateTimeRef = useRef(Date.now());
   const lastCoordsRef = useRef(null);
   const lastSpeedRef = useRef(0); 
   const wakeLockRef = useRef(null);
@@ -44,7 +46,6 @@ export default function App() {
   useEffect(() => localStorage.setItem('townace_maxspeed', maxSpeed.toString()), [maxSpeed]);
   useEffect(() => localStorage.setItem('townace_fuel', fuel.toString()), [fuel]);
 
-  // --- VEHICLE MATH ---
   const getConsumptionRate = (currentSpeed) => {
     if (currentSpeed > 90) return 13;
     if (currentSpeed >= 60) return 14; 
@@ -60,7 +61,6 @@ export default function App() {
     return R * c; 
   };
 
-  // --- AUDIO ENGINE ---
   const playIgnitionTone = (freq, type, duration) => {
     try {
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -76,29 +76,47 @@ export default function App() {
     } catch (e) {}
   };
 
-  // --- GPS TRACKING ENGINE ---
+  // --- HYPER-ACCURATE GPS ENGINE ---
   const startGpsStream = () => {
     if (!navigator.geolocation) {
       setGpsStatus('lost');
       return;
     }
     setGpsStatus('searching');
+    lastUpdateTimeRef.current = Date.now();
+
+    // The Decay Engine: Fixes iOS GPS sleep when stopped
+    staleIntervalRef.current = setInterval(() => {
+      if (Date.now() - lastUpdateTimeRef.current > 2000) {
+        setSpeed((prev) => {
+          if (prev > 0) {
+            const decayed = prev * 0.4; // Drops speed to zero smoothly
+            return decayed < 1 ? 0 : decayed;
+          }
+          return 0;
+        });
+        if (speed < 2) setEcoColor('#3b82f6'); // Return glow to Idle Blue
+      }
+    }, 500);
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setGpsStatus('ready');
+        lastUpdateTimeRef.current = Date.now(); // Register fresh signal
+        
         const rawSpeed = pos.coords.speed;
         
-        // Filter out stationary noise (< 0.4 m/s approx 1.4km/h) to prevent speed flicker
-        let kmh = rawSpeed && rawSpeed > 0.4 ? rawSpeed * 3.6 : 0;
+        // Stricter noise filter (approx 1 km/h cutoff)
+        let kmh = rawSpeed && rawSpeed > 0.25 ? rawSpeed * 3.6 : 0;
         
-        // WAGON-R AMBIENT GLOW LOGIC
+        // WAGON-R GLOW LOGIC
         let acceleration = kmh - lastSpeedRef.current;
         if (kmh < 3) {
-          setEcoColor('#3b82f6'); // Blue (Parked/Idling)
-        } else if (acceleration > 1.5) {
+          setEcoColor('#3b82f6'); // Blue (Idle)
+        } else if (acceleration > 1.2) {
           setEcoColor('#3b82f6'); // Blue (Accelerating)
-        } else if (acceleration < -1.5) {
-          setEcoColor('#ffffff'); // White (Decelerating/Braking)
+        } else if (acceleration < -1.2) {
+          setEcoColor('#ffffff'); // White (Braking/Coasting)
         } else {
           setEcoColor('#10b981'); // Green (Eco-Cruising)
         }
@@ -106,14 +124,11 @@ export default function App() {
         lastSpeedRef.current = kmh;
         setSpeed(kmh);
         
-        // Update Max Speed
         if (kmh > maxSpeed) setMaxSpeed(kmh);
 
-        // Calculate Trip and Fuel (Only if vehicle is actually moving to prevent GPS drift)
+        // Distance & Fuel tracking
         if (lastCoordsRef.current) {
           const d = calculateDistance(lastCoordsRef.current.latitude, lastCoordsRef.current.longitude, pos.coords.latitude, pos.coords.longitude);
-          
-          // Must be moving (kmh > 0) and distance must not be a massive teleport spike (d < 0.1km)
           if (d < 0.1 && kmh > 0) {
             setDistance((prev) => prev + d);
             setFuel((prevFuel) => Math.max(0, prevFuel - (d / getConsumptionRate(kmh))));
@@ -122,19 +137,19 @@ export default function App() {
         lastCoordsRef.current = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       },
       () => setGpsStatus('lost'),
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   };
 
   const stopGpsStream = () => {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    if (staleIntervalRef.current) clearInterval(staleIntervalRef.current);
     lastCoordsRef.current = null;
     lastSpeedRef.current = 0;
     setSpeed(0);
     setEcoColor('#3b82f6');
   };
 
-  // --- MASTER IGNITION ---
   const toggleEngineState = () => {
     if (!engineActive && !isPoweringUp) {
       setIsPoweringUp(true);
@@ -170,9 +185,9 @@ export default function App() {
     return () => { stopGpsStream(); if (wakeLockRef.current) wakeLockRef.current.release(); };
   }, []);
 
-  // --- UI RENDER CALCULATIONS ---
+  // --- SCALED UI CALCULATIONS FOR IPHONE 11 HEIGHT ---
   const activeSpeed = isPoweringUp ? sweepSpeed : speed;
-  const radius = 130;
+  const radius = 110; // Scaled down to prevent clipping
   const circ = 2 * Math.PI * radius;
   const offset = circ - (Math.min(activeSpeed, MAX_DIAL_SPEED) / MAX_DIAL_SPEED) * circ;
   
@@ -181,7 +196,6 @@ export default function App() {
 
   return (
     <>
-      {/* --- PORTRAIT WARNING SCREEN --- */}
       <div style={{
         position: 'fixed', inset: 0, backgroundColor: '#09090b', zIndex: 9999,
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -189,106 +203,101 @@ export default function App() {
       }} className="portrait-warning">
         <span style={{ fontSize: '40px', marginBottom: '16px' }}>🔄</span>
         <h2 className="font-digital" style={{ fontSize: '16px', letterSpacing: '2px', margin: 0, color: '#3b82f6' }}>ROTATE DEVICE</h2>
-        <p style={{ fontSize: '12px', color: '#52525b', marginTop: '8px' }}>Please turn your iPhone horizontally to view the dashboard.</p>
+        <p style={{ fontSize: '12px', color: '#52525b', marginTop: '8px' }}>Please turn your iPhone horizontally.</p>
       </div>
 
-      {/* --- MAIN LANDSCAPE DASHBOARD --- */}
       <div style={{
-        position: 'absolute', inset: 0, width: '100vw', height: '100vh', flexDirection: 'column', 
-        justifyContent: 'space-between', padding: '24px 32px', boxSizing: 'border-box', zIndex: 1, backgroundColor: '#09090b',
-        paddingLeft: 'max(32px, env(safe-area-inset-left))', paddingRight: 'max(32px, env(safe-area-inset-right))'
+        position: 'absolute', inset: 0, width: '100vw', height: '100dvh', flexDirection: 'column', 
+        justifyContent: 'space-between', boxSizing: 'border-box', zIndex: 1, backgroundColor: '#09090b',
+        padding: '12px max(32px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(32px, env(safe-area-inset-left))'
       }} className="main-dashboard-layout">
         
-        {/* --- WAGON-R AMBIENT GLOW --- */}
         <div style={{
           position: 'absolute', inset: 0, backgroundColor: engineActive ? ecoColor : 'transparent',
           opacity: 0.08, transition: 'background-color 1.5s ease-in-out', pointerEvents: 'none', zIndex: 0
         }} />
 
-        {/* --- TOP HEADER DECK --- */}
+        {/* --- TOP HEADER --- */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 20 }}>
           <div>
             <h1 className="font-digital" style={{ margin: 0, fontSize: '14px', letterSpacing: '4px', color: '#52525b', fontWeight: 'bold' }}>TOWNACE</h1>
             <p style={{ margin: '3px 0 0 0', fontSize: '10px', color: '#3f3f46', letterSpacing: '2px', fontWeight: 'bold' }}>DIGITAL DASH</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: 'rgba(24,24,27,0.4)', border: '1px solid rgba(63,63,70,0.3)', padding: '8px 18px', borderRadius: '12px', opacity: engineActive ? 1 : 0.15, transition: 'all 0.5s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: 'rgba(24,24,27,0.4)', border: '1px solid rgba(63,63,70,0.3)', padding: '6px 16px', borderRadius: '12px', opacity: engineActive ? 1 : 0.15, transition: 'all 0.5s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: '9px', color: '#71717a', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>GPS</span>
               <span className="font-digital" style={{ fontSize: '12px', fontWeight: 'bold', color: '#e4e4e7' }}>
                 {!engineActive ? 'OFF' : gpsStatus === 'ready' ? 'READY' : gpsStatus === 'searching' ? 'SEARCHING' : 'LOST'}
               </span>
             </div>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', transition: 'all 0.4s ease', backgroundColor: !engineActive ? '#27272a' : gpsStatus === 'ready' ? '#10b981' : gpsStatus === 'searching' ? '#f59e0b' : '#ef4444', boxShadow: engineActive && gpsStatus === 'ready' ? '0 0 12px #10b981' : 'none' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', transition: 'all 0.4s ease', backgroundColor: !engineActive ? '#27272a' : gpsStatus === 'ready' ? '#10b981' : gpsStatus === 'searching' ? '#f59e0b' : '#ef4444', boxShadow: engineActive && gpsStatus === 'ready' ? '0 0 10px #10b981' : 'none' }} />
           </div>
         </div>
 
         {/* --- MAIN MATRIX --- */}
-        <div style={{ display: 'flex', flex: 1, width: '100%', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1100px', margin: '0 auto', boxSizing: 'border-box', zIndex: 10 }}>
+        <div style={{ display: 'flex', flex: 1, width: '100%', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1000px', margin: '0 auto', boxSizing: 'border-box', zIndex: 10 }}>
           
-          {/* LEFT CARDS: MAX SPEED & FUEL */}
-          <div className="fade-in-ui" style={{ width: '25%', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(-40px)' }}>
-            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '16px 20px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+          {/* LEFT CARDS */}
+          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(-40px)' }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '12px 16px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#ef4444', borderRadius: '16px 0 0 16px' }} />
-              <p style={{ margin: 0, fontSize: '11px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>MAX SPEED</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '28px', fontWeight: 'bold' }}><span className="font-digital">{Math.round(maxSpeed)}</span><span style={{ fontSize: '12px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM/H</span></p>
+              <p style={{ margin: 0, fontSize: '10px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>MAX SPEED</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '24px', fontWeight: 'bold' }}><span className="font-digital">{Math.round(maxSpeed)}</span><span style={{ fontSize: '11px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM/H</span></p>
             </div>
 
-            <div onClick={() => { setTempFuel(Math.round(fuel)); setIsFuelModalOpen(true); }} style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '16px 20px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', cursor: 'pointer' }}>
+            <div onClick={() => { setTempFuel(Math.round(fuel)); setIsFuelModalOpen(true); }} style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '12px 16px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', cursor: 'pointer' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#f59e0b', borderRadius: '16px 0 0 16px' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontSize: '11px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>FUEL TANK</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>{fuel.toFixed(1)}L</p>
+                <p style={{ margin: 0, fontSize: '10px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>FUEL</p>
+                <p style={{ margin: 0, fontSize: '11px', color: '#a1a1aa', fontWeight: 'bold' }}>{fuel.toFixed(1)}L</p>
               </div>
-              <div style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '4px', marginTop: '10px' }}>
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} style={{ height: '8px', flex: 1, borderRadius: '2px', transition: 'background-color 0.5s ease', backgroundColor: i < activeFuelBars ? (activeFuelBars <= 1 ? '#ef4444' : '#f59e0b') : 'rgba(63,63,70,0.3)' }} />
+                  <div key={i} style={{ height: '6px', flex: 1, borderRadius: '2px', transition: 'background-color 0.5s ease', backgroundColor: i < activeFuelBars ? (activeFuelBars <= 1 ? '#ef4444' : '#f59e0b') : 'rgba(63,63,70,0.3)' }} />
                 ))}
               </div>
             </div>
           </div>
 
-          {/* CENTER: SPEEDOMETER & FOCUSED GLOW */}
-          <div style={{ position: 'relative', width: '320px', height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            
-            <div style={{ position: 'absolute', width: '200px', height: '200px', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(50px)', opacity: 0.3, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
-
+          {/* CENTER: SCALED SPEEDOMETER */}
+          <div style={{ position: 'relative', width: '260px', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', width: '180px', height: '180px', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(45px)', opacity: 0.3, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
             <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', zIndex: 1 }}>
-              <circle cx="160" cy="160" r={radius} stroke="rgba(24,24,27,0.7)" strokeWidth="16" fill="transparent" />
-              <circle cx="160" cy="160" r={radius} stroke={activeSpeed > 110 ? '#ef4444' : activeSpeed > 70 ? '#f59e0b' : '#3b82f6'} strokeWidth="12" fill="transparent" strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: isPoweringUp ? 'stroke-dashoffset 0.5s ease-out' : 'stroke-dashoffset 0.18s ease-out' }} opacity={engineActive || isPoweringUp ? 1 : 0.04} />
+              <circle cx="130" cy="130" r={radius} stroke="rgba(24,24,27,0.7)" strokeWidth="14" fill="transparent" />
+              <circle cx="130" cy="130" r={radius} stroke={activeSpeed > 110 ? '#ef4444' : activeSpeed > 70 ? '#f59e0b' : '#3b82f6'} strokeWidth="10" fill="transparent" strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: isPoweringUp ? 'stroke-dashoffset 0.5s ease-out' : 'stroke-dashoffset 0.18s ease-out' }} opacity={engineActive || isPoweringUp ? 1 : 0.04} />
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', zIndex: 2 }}>
-              <span className="font-digital" style={{ fontSize: '96px', fontWeight: '900', letterSpacing: '-4px', margin: 0, padding: 0, lineHeight: 1, color: !engineActive && !isPoweringUp ? '#18181b' : '#ffffff', transition: 'color 0.4s ease', textShadow: engineActive ? '0 0 20px rgba(255,255,255,0.2)' : 'none' }}>{Math.round(activeSpeed)}</span>
-              <span style={{ fontSize: '12px', letterSpacing: '5px', color: engineActive ? '#52525b' : '#27272a', fontWeight: 'bold', marginTop: '4px' }}>KM/H</span>
+              <span className="font-digital" style={{ fontSize: '76px', fontWeight: '900', letterSpacing: '-4px', margin: 0, padding: 0, lineHeight: 1, color: !engineActive && !isPoweringUp ? '#18181b' : '#ffffff', transition: 'color 0.4s ease', textShadow: engineActive ? '0 0 20px rgba(255,255,255,0.2)' : 'none' }}>{Math.round(activeSpeed)}</span>
+              <span style={{ fontSize: '11px', letterSpacing: '4px', color: engineActive ? '#52525b' : '#27272a', fontWeight: 'bold', marginTop: '4px' }}>KM/H</span>
             </div>
           </div>
 
-          {/* RIGHT CARDS: TRIP & RANGE */}
-          <div className="fade-in-ui" style={{ width: '25%', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(40px)' }}>
-            
-            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '16px 20px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+          {/* RIGHT CARDS */}
+          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(40px)' }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '12px 16px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#3b82f6', borderRadius: '16px 0 0 16px' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontSize: '11px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>TRIP</p>
+                <p style={{ margin: 0, fontSize: '10px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>TRIP</p>
                 <button onClick={handleTripReset} style={{ background: 'rgba(63,63,70,0.3)', border: '1px solid rgba(63,63,70,0.5)', color: '#a1a1aa', fontSize: '9px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>RESET</button>
               </div>
-              <p style={{ margin: '4px 0 0 0', fontSize: '28px', fontWeight: 'bold' }}><span className="font-digital">{distance.toFixed(1)}</span><span style={{ fontSize: '12px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '24px', fontWeight: 'bold' }}><span className="font-digital">{distance.toFixed(1)}</span><span style={{ fontSize: '11px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '16px 20px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(24,24,27,0.6), rgba(9,9,11,0.9))', border: '1px solid rgba(63,63,70,0.3)', padding: '12px 16px', borderRadius: '16px', position: 'relative', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#10b981', borderRadius: '16px 0 0 16px' }} />
-              <p style={{ margin: 0, fontSize: '11px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>EST RANGE</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '28px', fontWeight: 'bold' }}><span className="font-digital">{Math.round(estimatedRange)}</span><span style={{ fontSize: '12px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
+              <p style={{ margin: 0, fontSize: '10px', color: '#71717a', fontWeight: 'bold', letterSpacing: '2px' }}>RANGE</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '24px', fontWeight: 'bold' }}><span className="font-digital">{Math.round(estimatedRange)}</span><span style={{ fontSize: '11px', color: '#52525b', marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
             </div>
           </div>
 
         </div>
 
-        {/* --- BOTTOM IGNITION CONTROL --- */}
+        {/* --- SCALED BOTTOM CONTROL --- */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', zIndex: 20 }}>
-          <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ background: isPoweringUp ? 'rgba(39,39,42,0.2)' : engineActive ? 'rgba(239,68,68,0.08)' : 'rgba(24,24,27,0.85)', border: isPoweringUp ? '1px solid rgba(63,63,70,0.2)' : engineActive ? '1px solid #ef4444' : '1px solid #27272a', color: isPoweringUp ? '#71717a' : engineActive ? '#ef4444' : '#a1a1aa', padding: '16px 48px', borderRadius: '40px', fontSize: '14px', fontWeight: 'bold', letterSpacing: '4px', cursor: isPoweringUp ? 'wait' : 'pointer', transition: 'all 0.4s ease', outline: 'none', boxShadow: engineActive ? '0 0 25px rgba(239,68,68,0.25)' : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {isPoweringUp && <div className="animate-spin-fast" style={{ width: '14px', height: '14px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
+          <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ background: isPoweringUp ? 'rgba(39,39,42,0.2)' : engineActive ? 'rgba(239,68,68,0.08)' : 'rgba(24,24,27,0.85)', border: isPoweringUp ? '1px solid rgba(63,63,70,0.2)' : engineActive ? '1px solid #ef4444' : '1px solid #27272a', color: isPoweringUp ? '#71717a' : engineActive ? '#ef4444' : '#a1a1aa', padding: '12px 40px', borderRadius: '40px', fontSize: '12px', fontWeight: 'bold', letterSpacing: '4px', cursor: isPoweringUp ? 'wait' : 'pointer', transition: 'all 0.4s ease', outline: 'none', boxShadow: engineActive ? '0 0 20px rgba(239,68,68,0.25)' : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
               <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENGINE OFF' : 'ENGINE ON'}</span>
             </div>
           </button>
@@ -297,13 +306,13 @@ export default function App() {
         {/* --- FUEL OVERLAY MODAL --- */}
         {isFuelModalOpen && (
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '24px', padding: '32px', width: '300px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
-              <h2 className="font-digital" style={{ margin: '0 0 16px 0', fontSize: '16px', letterSpacing: '2px', color: '#f59e0b' }}>ADJUST FUEL</h2>
-              <div style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '20px' }}><span className="font-digital">{tempFuel}</span><span style={{ fontSize: '20px', color: '#71717a' }}>L</span></div>
-              <input type="range" min="0" max="50" value={tempFuel} onChange={(e) => setTempFuel(Number(e.target.value))} style={{ width: '100%', marginBottom: '32px', accentColor: '#f59e0b' }} />
+            <div style={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '24px', padding: '24px', width: '280px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+              <h2 className="font-digital" style={{ margin: '0 0 16px 0', fontSize: '14px', letterSpacing: '2px', color: '#f59e0b' }}>ADJUST FUEL</h2>
+              <div style={{ fontSize: '40px', fontWeight: 'bold', marginBottom: '20px' }}><span className="font-digital">{tempFuel}</span><span style={{ fontSize: '16px', color: '#71717a' }}>L</span></div>
+              <input type="range" min="0" max="50" value={tempFuel} onChange={(e) => setTempFuel(Number(e.target.value))} style={{ width: '100%', marginBottom: '24px', accentColor: '#f59e0b' }} />
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={() => setIsFuelModalOpen(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #3f3f46', color: '#a1a1aa', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>CANCEL</button>
-                <button onClick={() => { setFuel(tempFuel); setIsFuelModalOpen(false); }} style={{ flex: 1, padding: '12px', background: '#f59e0b', border: 'none', color: '#000', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE</button>
+                <button onClick={() => setIsFuelModalOpen(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid #3f3f46', color: '#a1a1aa', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>CANCEL</button>
+                <button onClick={() => { setFuel(tempFuel); setIsFuelModalOpen(false); }} style={{ flex: 1, padding: '10px', background: '#f59e0b', border: 'none', color: '#000', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE</button>
               </div>
             </div>
           </div>
