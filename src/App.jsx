@@ -203,6 +203,7 @@ export default function App() {
 
   return (
     <>
+      {/* --- WARNING SCREEN --- */}
       <div style={{
         position: 'fixed', inset: 0, backgroundColor: '#000000', zIndex: 9999,
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -234,7 +235,9 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div>
               <h1 className="font-digital" style={{ margin: 0, fontSize: '18px', letterSpacing: '4px', color: theme.muted, fontWeight: 'bold' }}>TOWNACE</h1>
-              <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: theme.muted, letterSpacing: '2px', fontWeight: 'bold' }}>DIGITAL DASH</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: theme.muted, letterSpacing: '1px', fontWeight: 'bold', fontFamily: 'system-ui, sans-serif' }}>
+                トヨタ タウンエース DX
+              </p>
             </div>
             
             {/* DAY/NIGHT SVG TOGGLE */}
@@ -300,8 +303,8 @@ export default function App() {
           {/* CENTER: MASSIVE DIGITAL READOUT */}
           <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             
-            {/* Core Speed Glow */}
-            <div style={{ position: 'absolute', width: '250px', height: '150px', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(70px)', opacity: isDarkMode ? 0.3 : 0.6, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
+            {/* Core Speed Glow - Tighter blur, higher opacity for visibility without glare */}
+            <div style={{ position: 'absolute', width: '260px', height: '160px', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(55px)', opacity: isDarkMode ? 0.45 : 0.7, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
 
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span className="font-digital" style={{ 
@@ -335,7 +338,7 @@ export default function App() {
 
         </div>
 
-        {/* --- BOTTOM CONTROL (Pushed to bottom left, smaller) --- */}
+        {/* --- BOTTOM CONTROL --- */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20 }}>
           <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ 
             background: isPoweringUp ? theme.btnBg : engineActive ? 'rgba(239,68,68,0.1)' : theme.cardBg, 
@@ -347,7 +350,7 @@ export default function App() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
-              <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENGINE OFF' : 'ENGINE ON'}</span>
+              <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}</span>
             </div>
           </button>
         </div>
