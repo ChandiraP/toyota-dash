@@ -1,0 +1,36 @@
+/* Core System Reset */
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  overflow: hidden !important;
+  font-family: 'Inter', -apple-system, sans-serif;
+  
+  /* Disables iOS text selection and tap highlights on the dashboard */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Premium Digital Instrument Font */
+.font-digital {
+  font-family: 'Orbitron', monospace !important;
+}
+
+/* Engine Ignition Spinner Animation */
+@keyframes dashboard-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin-fast {
+  animation: dashboard-spin 0.7s linear infinite;
+}
+
+/* Smooth Fade-ins for UI Elements */
+.fade-in-ui {
+  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
