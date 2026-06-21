@@ -259,12 +259,12 @@ export default function App() {
           opacity: isDarkMode ? 0.05 : 0.02, transition: 'background-color 1.5s ease-in-out', pointerEvents: 'none', zIndex: 0
         }} />
 
-        {/* HEADER BLOCK */}
+        {/* HEADER BLOCK - Slightly larger titles for driving glanceability */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2vw' }}>
             <div>
-              <h1 className="font-digital" style={{ margin: 0, fontSize: '1.6vw', letterSpacing: '3px', color: theme.muted, fontWeight: 'bold' }}>TOWNACE</h1>
-              <p style={{ margin: '2px 0 0 0', fontSize: '1vw', color: theme.muted, letterSpacing: '1px', fontWeight: 'bold', fontFamily: 'system-ui, sans-serif' }}>
+              <h1 className="font-digital" style={{ margin: 0, fontSize: '1.8vw', letterSpacing: '3px', color: theme.muted, fontWeight: 'bold' }}>TOWNACE</h1>
+              <p style={{ margin: '2px 0 0 0', fontSize: '1.1vw', color: theme.muted, letterSpacing: '1px', fontWeight: 'bold', fontFamily: 'system-ui, sans-serif' }}>
                 トヨタ タウンエース DX
               </p>
             </div>
@@ -274,7 +274,7 @@ export default function App() {
               style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, color: theme.text, borderRadius: '10px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s' }}
             >
               {isDarkMode ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="5"></circle>
                   <line x1="12" y1="1" x2="12" y2="3"></line>
                   <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -286,7 +286,7 @@ export default function App() {
                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
               )}
@@ -295,33 +295,33 @@ export default function App() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1vw', background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '6px 16px', borderRadius: '12px', opacity: engineActive ? 1 : 0.2, transition: 'all 0.5s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '0.8vw', color: theme.muted, textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>GPS</span>
-              <span className="font-digital" style={{ fontSize: '1.2vw', fontWeight: 'bold', color: theme.text }}>
+              <span style={{ fontSize: '1vw', color: theme.muted, textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' }}>GPS</span>
+              <span className="font-digital" style={{ fontSize: '1.4vw', fontWeight: 'bold', color: theme.text }}>
                 {!engineActive ? 'OFF' : gpsStatus === 'ready' ? 'READY' : gpsStatus === 'searching' ? 'SEARCHING' : 'LOST'}
               </span>
             </div>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', transition: 'all 0.4s ease', backgroundColor: !engineActive ? theme.muted : gpsStatus === 'ready' ? '#10b981' : gpsStatus === 'searching' ? '#f59e0b' : '#ef4444', boxShadow: engineActive && gpsStatus === 'ready' ? '0 0 10px #10b981' : 'none' }} />
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', transition: 'all 0.4s ease', backgroundColor: !engineActive ? theme.muted : gpsStatus === 'ready' ? '#10b981' : gpsStatus === 'searching' ? '#f59e0b' : '#ef4444', boxShadow: engineActive && gpsStatus === 'ready' ? '0 0 10px #10b981' : 'none' }} />
           </div>
         </div>
 
         {/* METRICS GRID */}
         <div style={{ display: 'flex', flex: 1, width: '100%', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box', zIndex: 10 }}>
           
-          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '1.5vh', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(-40px)' }}>
-            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.2vw 1.6vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
+          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '2vh', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(-40px)' }}>
+            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.5vw 1.8vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#ef4444', borderRadius: '16px 0 0 16px' }} />
-              <p style={{ margin: 0, fontSize: '1.1vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>AVG SPEED</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '2.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{Math.round(avgSpeed)}</span><span style={{ fontSize: '1.1vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM/H</span></p>
+              <p style={{ margin: 0, fontSize: '1.4vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>AVG SPEED</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '3.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{Math.round(avgSpeed)}</span><span style={{ fontSize: '1.4vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM/H</span></p>
             </div>
 
-            <div onClick={() => { setTempFuel(Math.round(fuel)); setIsFuelModalOpen(true); }} style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.2vw 1.6vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow, cursor: 'pointer' }}>
+            <div onClick={() => { setTempFuel(Math.round(fuel)); setIsFuelModalOpen(true); }} style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.5vw 1.8vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow, cursor: 'pointer' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#f59e0b', borderRadius: '16px 0 0 16px' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontSize: '1.1vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>FUEL</p>
+                <p style={{ margin: 0, fontSize: '1.4vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>FUEL</p>
               </div>
-              <div style={{ display: 'flex', gap: '4px', marginTop: '1vh' }}>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '1.5vh' }}>
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} style={{ height: '8px', flex: 1, borderRadius: '2px', transition: 'background-color 0.5s ease', backgroundColor: i < activeFuelBars ? (activeFuelBars <= 1 ? '#ef4444' : '#f59e0b') : theme.btnBg }} />
+                  <div key={i} style={{ height: '10px', flex: 1, borderRadius: '3px', transition: 'background-color 0.5s ease', backgroundColor: i < activeFuelBars ? (activeFuelBars <= 1 ? '#ef4444' : '#f59e0b') : theme.btnBg }} />
                 ))}
               </div>
             </div>
@@ -329,10 +329,10 @@ export default function App() {
 
           {/* MAIN SPEEDOMETER */}
           <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ position: 'absolute', width: '22vw', height: '14vw', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(55px)', opacity: isDarkMode ? 0.45 : 0.7, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
+            <div style={{ position: 'absolute', width: '24vw', height: '16vw', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(55px)', opacity: isDarkMode ? 0.45 : 0.7, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span className="font-digital" style={{ 
-                fontSize: '13vw', 
+                fontSize: '15vw', 
                 fontWeight: '900', 
                 letterSpacing: '-0.4vw', margin: 0, padding: 0, lineHeight: 0.9, 
                 color: !engineActive && !isPoweringUp ? theme.muted : theme.text, transition: 'color 0.4s ease',
@@ -340,39 +340,39 @@ export default function App() {
               }}>
                 {Math.round(activeSpeed)}
               </span>
-              <span style={{ fontSize: '1.3vw', letterSpacing: '6px', color: engineActive ? theme.muted : theme.cardBorder, fontWeight: 'bold', marginTop: '4px' }}>KM/H</span>
+              <span style={{ fontSize: '1.6vw', letterSpacing: '6px', color: engineActive ? theme.muted : theme.cardBorder, fontWeight: 'bold', marginTop: '8px' }}>KM/H</span>
             </div>
           </div>
 
           {/* RIGHT TELEMETRY */}
-          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '1.5vh', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(40px)' }}>
-            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.2vw 1.6vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
+          <div className="fade-in-ui" style={{ width: '26%', display: 'flex', flexDirection: 'column', gap: '2vh', justifyContent: 'center', opacity: uiVisible ? 1 : 0, transform: uiVisible ? 'translateX(0)' : 'translateX(40px)' }}>
+            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.5vw 1.8vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#3b82f6', borderRadius: '16px 0 0 16px' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontSize: '1.1vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>TRIP</p>
-                <button onClick={handleTripReset} style={{ background: theme.btnBg, border: 'none', color: theme.text, fontSize: '0.9vw', fontWeight: 'bold', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>RESET</button>
+                <p style={{ margin: 0, fontSize: '1.4vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>TRIP</p>
+                <button onClick={handleTripReset} style={{ background: theme.btnBg, border: 'none', color: theme.text, fontSize: '1vw', fontWeight: 'bold', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}>RESET</button>
               </div>
-              <p style={{ margin: '2px 0 0 0', fontSize: '2.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{distance.toFixed(1)}</span><span style={{ fontSize: '1.1vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '3.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{distance.toFixed(1)}</span><span style={{ fontSize: '1.4vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
             </div>
 
-            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.2vw 1.6vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
+            <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, padding: '1.5vw 1.8vw', borderRadius: '16px', position: 'relative', boxShadow: theme.shadow }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#10b981', borderRadius: '16px 0 0 16px' }} />
-              <p style={{ margin: 0, fontSize: '1.1vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>EST RANGE</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '2.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{Math.round(estimatedRange)}</span><span style={{ fontSize: '1.1vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
+              <p style={{ margin: 0, fontSize: '1.4vw', color: theme.muted, fontWeight: 'bold', letterSpacing: '2px' }}>EST RANGE</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '3.8vw', color: theme.text, fontWeight: 'bold' }}><span className="font-digital">{Math.round(estimatedRange)}</span><span style={{ fontSize: '1.4vw', color: theme.muted, marginLeft: '6px', fontWeight: 'bold' }}>KM</span></p>
             </div>
           </div>
         </div>
 
-        {/* IGNITION BUTTON CONTAINER (Flex Shrink Locked & Explicitly Spaced) */}
+        {/* IGNITION BUTTON CONTAINER */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20, flexShrink: 0, paddingBottom: '1vh' }}>
           <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ 
             background: isPoweringUp ? theme.btnBg : engineActive ? 'rgba(239,68,68,0.1)' : theme.cardBg, 
             border: `2px solid ${engineActive ? '#ef4444' : theme.cardBorder}`, 
             color: isPoweringUp ? theme.muted : engineActive ? '#ef4444' : theme.text, 
-            height: '48px', /* Explicit height to override Safari squishing */
-            padding: '0 24px', 
+            height: '48px', 
+            padding: '0 28px', 
             borderRadius: '50px', 
-            fontSize: '1.1vw', 
+            fontSize: '1.3vw', 
             fontWeight: 'bold', 
             letterSpacing: '2px', 
             cursor: isPoweringUp ? 'wait' : 'pointer', 
@@ -382,13 +382,11 @@ export default function App() {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            gap: '8px',
-            flexShrink: 0, /* Prevents the button itself from compressing */
+            gap: '10px',
+            flexShrink: 0, 
             boxSizing: 'border-box'
           }}>
-            {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%', flexShrink: 0 }} />}
-            
-            {/* Forced Line Height to center the text perfectly inside the red ring */}
+            {isPoweringUp && <div className="animate-spin-fast" style={{ width: '14px', height: '14px', border: '3px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%', flexShrink: 0 }} />}
             <span className="font-digital" style={{ lineHeight: 1, paddingTop: '2px' }}>
               {isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}
             </span>
