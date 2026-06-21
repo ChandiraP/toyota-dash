@@ -7,32 +7,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - uses: actions/setup-node@v4
         with:
-<<<<<<< HEAD
-          node-version: '22' # <-- Upgraded to modern Node 22
-=======
           node-version: 22
-          
->>>>>>> c9b36d3 (Fix Java JVM version for Android Gradle)
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17' # Explicitly set to 17 for modern Android
-          
+          java-version: '17'
       - name: Build Web Assets
         run: |
           npm install
           npm run build
           npx cap sync android
-          
       - name: Compile Native APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-          
       - name: Upload APK Download Link
         uses: actions/upload-artifact@v4
         with:
