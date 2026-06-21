@@ -4,12 +4,12 @@ html, body, #root {
   padding: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background-color: #09090b !important;
+  background-color: #000000 !important;
   color: #ffffff !important;
   overflow: hidden !important;
   font-family: 'Inter', -apple-system, sans-serif;
   
-  /* Disables iOS text selection and tap highlights on the dashboard */
+  /* Disables text selection and tap highlights */
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
@@ -37,7 +37,7 @@ html, body, #root {
 
 /* --- HARDWARE ROTATION LOCKS --- */
 
-/* When the iPhone 11 is held portrait (vertically) */
+/* Vertical Hold: Forces rotation prompt */
 @media (orientation: portrait) {
   .portrait-warning {
     display: flex !important;
@@ -47,7 +47,7 @@ html, body, #root {
   }
 }
 
-/* When the iPhone 11 is turned landscape (horizontally) */
+/* Horizontal Hold: Spreads the instrumentation workspace */
 @media (orientation: landscape) {
   .portrait-warning {
     display: none !important;
