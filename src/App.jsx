@@ -333,7 +333,7 @@ export default function App() {
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span className="font-digital" style={{ 
                 fontSize: '13vw', 
-                fontWeight: '900', /* Reverted back to 900 as per your request */
+                fontWeight: '900', 
                 letterSpacing: '-0.4vw', margin: 0, padding: 0, lineHeight: 0.9, 
                 color: !engineActive && !isPoweringUp ? theme.muted : theme.text, transition: 'color 0.4s ease',
                 textShadow: engineActive && isDarkMode ? '0 0 30px rgba(255,255,255,0.1)' : 'none' 
@@ -363,19 +363,35 @@ export default function App() {
           </div>
         </div>
 
-        {/* IGNITION BUTTON */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20, marginBottom: '2vh' /* Added margin to push clear of iOS home bar */ }}>
+        {/* IGNITION BUTTON CONTAINER (Flex Shrink Locked & Explicitly Spaced) */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20, flexShrink: 0, paddingBottom: '1vh' }}>
           <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ 
             background: isPoweringUp ? theme.btnBg : engineActive ? 'rgba(239,68,68,0.1)' : theme.cardBg, 
             border: `2px solid ${engineActive ? '#ef4444' : theme.cardBorder}`, 
             color: isPoweringUp ? theme.muted : engineActive ? '#ef4444' : theme.text, 
-            padding: '12px 28px', borderRadius: '40px', fontSize: '1.1vw', fontWeight: 'bold', letterSpacing: '2px', 
-            cursor: isPoweringUp ? 'wait' : 'pointer', transition: 'all 0.4s ease', outline: 'none', 
+            height: '48px', /* Explicit height to override Safari squishing */
+            padding: '0 24px', 
+            borderRadius: '50px', 
+            fontSize: '1.1vw', 
+            fontWeight: 'bold', 
+            letterSpacing: '2px', 
+            cursor: isPoweringUp ? 'wait' : 'pointer', 
+            transition: 'all 0.4s ease', 
+            outline: 'none', 
             boxShadow: engineActive && isDarkMode ? '0 0 15px rgba(239,68,68,0.15)' : 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' /* Applied flex directly to button */
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '8px',
+            flexShrink: 0, /* Prevents the button itself from compressing */
+            boxSizing: 'border-box'
           }}>
-            {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
-            <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}</span>
+            {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%', flexShrink: 0 }} />}
+            
+            {/* Forced Line Height to center the text perfectly inside the red ring */}
+            <span className="font-digital" style={{ lineHeight: 1, paddingTop: '2px' }}>
+              {isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}
+            </span>
           </button>
         </div>
 
