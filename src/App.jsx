@@ -17,7 +17,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c; 
 };
 
-// Global audio context reference to prevent memory leaks
 let globalAudioCtx = null;
 const playIgnitionTone = (freq, type, duration) => {
   try {
@@ -84,7 +83,7 @@ export default function App() {
   useEffect(() => localStorage.setItem('townace_fuel', fuel.toString()), [fuel]);
   useEffect(() => localStorage.setItem('townace_theme', isDarkMode.toString()), [isDarkMode]);
 
-  // --- CORE GPS ENGINE (Memoized to prevent unnecessary re-renders) ---
+  // --- CORE GPS ENGINE ---
   const startGpsStream = useCallback(() => {
     if (!navigator.geolocation) {
       setGpsStatus('lost');
@@ -208,7 +207,6 @@ export default function App() {
     setAvgSpeed(0);
   }, []);
 
-  // Strict cleanup on unmount
   useEffect(() => {
     return () => { 
       stopGpsStream(); 
@@ -231,10 +229,8 @@ export default function App() {
     btnBg: isDarkMode ? 'rgba(39,39,42,0.7)' : '#e4e4e7',
   }), [isDarkMode]);
 
-  // --- RENDER ---
   return (
     <>
-      {/* PORTRAIT WARNING */}
       <div style={{
         position: 'fixed', inset: 0, backgroundColor: '#000000', zIndex: 9999,
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -248,7 +244,6 @@ export default function App() {
         <p style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '12px' }}>Please rotate your hardware horizontally.</p>
       </div>
 
-      {/* DASHBOARD CANVAS */}
       <div style={{
         position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'column', 
         justifyContent: 'space-between', boxSizing: 'border-box', zIndex: 1, backgroundColor: theme.bg,
@@ -259,7 +254,6 @@ export default function App() {
         transition: 'background-color 0.4s ease'
       }} className="main-dashboard-layout">
         
-        {/* BACKGROUND GLOW */}
         <div style={{
           position: 'absolute', inset: 0, backgroundColor: engineActive ? ecoColor : 'transparent',
           opacity: isDarkMode ? 0.05 : 0.02, transition: 'background-color 1.5s ease-in-out', pointerEvents: 'none', zIndex: 0
@@ -338,7 +332,9 @@ export default function App() {
             <div style={{ position: 'absolute', width: '22vw', height: '14vw', borderRadius: '50%', backgroundColor: engineActive ? ecoColor : 'transparent', filter: 'blur(55px)', opacity: isDarkMode ? 0.45 : 0.7, transition: 'background-color 1.5s ease-in-out', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span className="font-digital" style={{ 
-                fontSize: '13vw', fontWeight: '900', letterSpacing: '-0.4vw', margin: 0, padding: 0, lineHeight: 0.9, 
+                fontSize: '13vw', 
+                fontWeight: '900', /* Reverted back to 900 as per your request */
+                letterSpacing: '-0.4vw', margin: 0, padding: 0, lineHeight: 0.9, 
                 color: !engineActive && !isPoweringUp ? theme.muted : theme.text, transition: 'color 0.4s ease',
                 textShadow: engineActive && isDarkMode ? '0 0 30px rgba(255,255,255,0.1)' : 'none' 
               }}>
@@ -368,19 +364,18 @@ export default function App() {
         </div>
 
         {/* IGNITION BUTTON */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20 }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', zIndex: 20, marginBottom: '2vh' /* Added margin to push clear of iOS home bar */ }}>
           <button onClick={toggleEngineState} disabled={isPoweringUp} style={{ 
             background: isPoweringUp ? theme.btnBg : engineActive ? 'rgba(239,68,68,0.1)' : theme.cardBg, 
             border: `2px solid ${engineActive ? '#ef4444' : theme.cardBorder}`, 
             color: isPoweringUp ? theme.muted : engineActive ? '#ef4444' : theme.text, 
-            padding: '8px 20px', borderRadius: '30px', fontSize: '1vw', fontWeight: 'bold', letterSpacing: '2px', 
+            padding: '12px 28px', borderRadius: '40px', fontSize: '1.1vw', fontWeight: 'bold', letterSpacing: '2px', 
             cursor: isPoweringUp ? 'wait' : 'pointer', transition: 'all 0.4s ease', outline: 'none', 
-            boxShadow: engineActive && isDarkMode ? '0 0 15px rgba(239,68,68,0.15)' : 'none' 
+            boxShadow: engineActive && isDarkMode ? '0 0 15px rgba(239,68,68,0.15)' : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' /* Applied flex directly to button */
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {isPoweringUp && <div className="animate-spin-fast" style={{ width: '10px', height: '10px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
-              <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}</span>
-            </div>
+            {isPoweringUp && <div className="animate-spin-fast" style={{ width: '12px', height: '12px', border: '2px solid #f59e0b', borderTopColor: 'transparent', borderRadius: '50%' }} />}
+            <span className="font-digital">{isPoweringUp ? 'STARTING...' : engineActive ? 'ENG OFF' : 'ENG ON'}</span>
           </button>
         </div>
 
