@@ -77,6 +77,7 @@ export default function App() {
   const lastSpeedRef = useRef(0); 
   const wakeLockRef = useRef(null);
   const speedQueueRef = useRef([]);
+  const recentGpsSpeedsRef = useRef([]);
 
   // --- AUTO-SAVE EFFECTS ---
   useEffect(() => localStorage.setItem('townace_distance', distance.toString()), [distance]);
@@ -117,11 +118,17 @@ export default function App() {
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setGpsStatus('ready');
-        lastUpdateTimeRef.current = Date.now(); 
-        
+        const accuracy = pos.coords.accuracy;
+        if (!Number.isFinite(accuracy) || accuracy > 25 || !Number.isFinite(pos.coords.speed)) return;
+        lastUpdateTimeRef.current = Date.now();
+
         const rawSpeed = pos.coords.speed;
-        let kmh = rawSpeed && rawSpeed > 0.25 ? rawSpeed * 3.6 : 0;
-        
+        const sampleKmh = rawSpeed > 0.25 ? rawSpeed * 3.6 : 0;
+        recentGpsSpeedsRef.current.push(sampleKmh);
+        if (recentGpsSpeedsRef.current.length > 5) recentGpsSpeedsRef.current.shift();
+        const sortedSpeeds = [...recentGpsSpeedsRef.current].sort((a, b) => a - b);
+        const kmh = sortedSpeeds[Math.floor(sortedSpeeds.length / 2)];
+
         speedQueueRef.current.push(kmh);
         if (speedQueueRef.current.length > 30) speedQueueRef.current.shift(); 
         const sum = speedQueueRef.current.reduce((a, b) => a + b, 0);
@@ -164,6 +171,7 @@ export default function App() {
     lastCoordsRef.current = null;
     lastSpeedRef.current = 0;
     speedQueueRef.current = [];
+    recentGpsSpeedsRef.current = [];
     setSpeed(0);
     setAvgSpeed(0);
     setEcoColor('#3b82f6');
